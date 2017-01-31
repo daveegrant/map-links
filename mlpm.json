@@ -1,0 +1,7 @@
+{
+  "name": "map-links",
+  "version": "0.0.1",
+  "description": "A companion to the ml-ol-maps-ng, providing server-side code to locate links for items on the map.",
+  "repository": "https://github.com/daveegrant/map-links.git",
+  "gitHead": ""
+}
