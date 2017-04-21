@@ -79,25 +79,32 @@ declare function build-graph(
             let $node := json:object()
             let $label := ($subject-labels[sem:subject = $subject]/sem:object/string(), $subject)[1]
             let $type := retrieve-type($subject-types, $subject)
+            let $edge-count := get-edge-count($subject)
+            let $props := get-object-props($subject, $label, $type, $edge-count)
             return (
               map:put($node, "label", $label),
               map:put($node, "id", $subject),
               map:put($node, "group", $type),
-              map:put($node, "edgeCount", get-edge-count($subject)),
+              map:put($node, "metadata", $props),
+              map:put($node, "edgeCount", $edge-count),
               map:put($node, "location", get-object-location($subject)),
               map:put($nodes-map, $subject, $node)
             ),
 
           for $result in $results
           let $object := map:get($result, "object")
+          let $label := (map:get($result, "label"),$object)[1]
           let $object-types := get-types($object)
           let $object-type := retrieve-type($object-types, $object)
+          let $edge-count := get-edge-count($object)
+          let $props := get-object-props($object, $label, $object-type, $edge-count)
           let $node := json:object()
           return (
-            map:put($node, "label", (map:get($result, "label"),$object)[1]),
+            map:put($node, "label", $label),
             map:put($node, "id", $object),
             map:put($node, "group", $object-type),
-            map:put($node, "edgeCount", get-edge-count($object)),
+            map:put($node, "metadata", $props),
+            map:put($node, "edgeCount", $edge-count),
             map:put($node, "location", get-object-location($object)),
             map:put($nodes-map, $object, $node),
 
@@ -120,14 +127,18 @@ declare function build-graph(
 
           for $result in $results-obj
           let $subj := map:get($result, "subject")
+          let $label := (map:get($result, "label"),$subj)[1]
           let $subj-types := get-types($subj)
           let $subj-type := retrieve-type($subj-types, $subj)
+          let $edge-count := get-edge-count($subj)
+          let $props := get-object-props($subj, $label, $subj-type, $edge-count)
           let $node := json:object()
           return (
-            map:put($node, "label", (map:get($result, "label"),$subj)[1]),
+            map:put($node, "label", $label),
             map:put($node, "id", $subj),
             map:put($node, "group", $subj-type),
-            map:put($node, "edgeCount", get-edge-count($subj)),
+            map:put($node, "metadata", $props),
+            map:put($node, "edgeCount", $edge-count),
             map:put($node, "location", get-object-location($subj)),
             map:put($nodes-map, $subj, $node),
 
@@ -178,6 +189,26 @@ declare private function retrieve-type(
 ) as xs:string?
 {
   ($types[sem:subject = $uri]/sem:object/string(), "unknown")[1]
+};
+
+declare private function get-object-props(
+  $subject as xs:string,
+  $label as xs:string,
+  $type as xs:string,
+  $child-count as xs:int
+) as json:object
+{
+  let $node := json:object()
+  let $_ :=
+    (
+      map:put($node, "id", $subject),
+      map:put($node, "uri", $subject),
+      map:put($node, "type", $type),
+      map:put($node, "label", $label),
+      map:put($node, "links", $child-count)
+    )
+
+  return $node
 };
 
 declare private function get-label($subject as xs:string) as xs:string
